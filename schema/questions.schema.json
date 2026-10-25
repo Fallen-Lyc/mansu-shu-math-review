@@ -1,0 +1,159 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "苏教版小学数学讲评课件输入数据",
+  "type": "object",
+  "required": ["questions"],
+  "properties": {
+    "meta": {
+      "type": "object",
+      "description": "封面与整册信息",
+      "properties": {
+        "paper_title": { "type": "string", "description": "卷子名称，封面主标题" },
+        "grade": { "type": ["integer", "string"], "description": "年级，如 3" },
+        "term": { "type": "string", "description": "上 / 下" },
+        "grade_label": { "type": "string", "description": "年级显示文本，如 三年级（可覆盖 grade）" },
+        "term_label": { "type": "string", "description": "册次显示文本，如 上册（可覆盖 term）" },
+        "unit": { "type": "string", "description": "单元，如 第三单元" },
+        "class": { "type": "string", "description": "班级，如 三（2）班" },
+        "date": { "type": "string", "description": "日期，如 2026年10月" },
+        "ending_note": { "type": "string", "description": "结束页寄语；留空则不生成结束页" }
+      }
+    },
+    "questions": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/definitions/question" }
+    }
+  },
+  "definitions": {
+    "question": {
+      "type": "object",
+      "required": ["stem"],
+      "properties": {
+        "no": { "type": ["string", "integer"], "description": "卷面题号，默认用序号" },
+        "type": { "type": "string", "description": "题型：填空 / 选择 / 判断 / 计算 / 操作 / 解决实际问题" },
+        "toc_label": { "type": "string", "description": "目录按钮上的短标签，缺省用 type" },
+        "stem": { "type": "string", "description": "题干全文" },
+        "stem_image_path": {
+          "type": "string",
+          "description": "题目图示的本地绝对路径；生成器会拷进项目 images/。优先用试卷原图"
+        },
+        "stem_image": {
+          "type": "string",
+          "description": "已位于项目内的相对路径 images/xxx.png；一般由生成器回填"
+        },
+        "spans": {
+          "type": "array",
+          "description": "题干片段，圈画的依据。**可省略**：不写时生成器按标点自动切分并标注（推荐）",
+          "items": {
+            "type": "object",
+            "required": ["text"],
+            "properties": {
+              "text": { "type": "string" },
+              "kind": {
+                "type": "string",
+                "enum": ["none", "cond", "ques", "key", "fig"],
+                "description": "none 不标 / cond 条件（蓝色横线+序号①②③）/ ques 问题（红色横线，不画圈）/ key 关键概念（黄色横线，不铺底色）/ fig 图形名称（橙色横线+小图形示意，不铺底色；题目说了是什么图形就必须标）"
+              }
+            }
+          }
+        },
+        "knowledge": {
+          "type": "array",
+          "description": "知识点标签，最多显示 3 个",
+          "items": { "type": "string" }
+        },
+        "analysis": {
+          "type": "object",
+          "description": "条件与问题的分析四格",
+          "properties": {
+            "exam_point": { "type": "string", "description": "考什么，≤30字" },
+            "key_conditions": { "type": "string", "description": "哪些是重点条件，≤30字" },
+            "relation": { "type": "string", "description": "条件怎么连起来，≤30字" },
+            "quantity_relation": { "type": "string", "description": "数量关系式，如 周长 = （长 + 宽）× 2" }
+          }
+        },
+        "mistakes": {
+          "type": "array",
+          "description": "易错点，1~2 条。可写字符串（错例+原因一句话），也可写对象",
+          "items": {
+            "anyOf": [
+              { "type": "string", "description": "一句话写法：错例与原因，如 \"12×10=120，把邻边当成高来乘了\"" },
+              {
+                "type": "object",
+                "properties": {
+                  "wrong": { "type": "string", "description": "典型错答" },
+                  "reason": { "type": "string", "description": "为什么错" },
+                  "fix": { "type": "string", "description": "怎么改" }
+                }
+              }
+            ]
+          }
+        },
+        "solutions": {
+          "type": "array",
+          "description": "解法，最多 2 种。每项可写对象，也可直接写步骤字符串数组",
+          "maxItems": 2,
+          "items": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "name": { "type": "string", "description": "方法名，如 方法一：用公式" },
+                  "answer": { "type": "string", "description": "该方法下的答句" },
+                  "steps": {
+                    "type": "array",
+                    "description": "步骤，最多渲染 6 步；每项可写算式字符串，也可写对象",
+                    "items": {
+                      "anyOf": [
+                        { "type": "string", "description": "算式字符串，如 \"= 12 × 8\"" },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "label": { "type": "string", "description": "这一步求什么，2~4字，如 周长" },
+                            "expr": { "type": "string", "description": "算式，如 （8 + 5）× 2" },
+                            "value": { "type": ["string", "number"], "description": "结果" },
+                            "unit": { "type": "string", "description": "单位，渲染成 （厘米）" },
+                            "note": { "type": "string", "description": "这一步的小提示，可省" },
+                            "lines": {
+                              "type": "array",
+                              "description": "综合算式脱式计算；给了 lines 就忽略 expr/value",
+                              "items": { "type": "string" }
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                }
+              },
+              { "type": "array", "description": "简写：直接给步骤数组", "items": { "type": "string" } },
+              { "type": "string", "description": "简写：每行一步的算式文本" }
+            ]
+          }
+        },
+        "answer": { "type": "string", "description": "完整答句，如 答：它的周长是26厘米。" },
+        "variants": {
+          "type": "array",
+          "description": "变式题；只有被使用者确认需要变式的题目才填。每项可写对象，也可直接写题干字符串",
+          "maxItems": 3,
+          "items": {
+            "anyOf": [
+              { "type": "string", "description": "简写：只给变式题干" },
+              {
+                "type": "object",
+                "properties": {
+                  "stem": { "type": "string" },
+                  "hint": { "type": "string", "description": "提示（先不给答案）" },
+                  "answer": { "type": "string" },
+                  "reveal": { "type": "boolean", "description": "是否点击才出现，默认 true" },
+                  "image_path": { "type": "string", "description": "变式配图的本地绝对路径；不填则不配图（不复用原题图，避免数字矛盾）" }
+                }
+              }
+            ]
+          }
+        }
+      }
+    }
+  }
+}

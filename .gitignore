@@ -1,0 +1,26 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# 虚拟环境（体积大，不入库；用 setup_env.py 重建）
+.venv/
+venv/
+env/
+
+# 生成物（课件、SVG、预览页都是本地产物）
+projects/
+build/
+dist/
+*.pptx
+preview.html
+
+# 系统与编辑器
+.DS_Store
+Thumbs.db
+*.swp
+.idea/
+.vscode/
+
+# 本地笔记
+.workbuddy/
